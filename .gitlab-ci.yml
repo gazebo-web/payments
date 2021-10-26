@@ -1,0 +1,18 @@
+stages:
+  - format
+  - test
+  - package
+
+include:
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/fmt.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/lint.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/vet.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/test.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/package.yml
+  - template: Code-Quality.gitlab-ci.yml
+
+code_quality:
+  variables:
+    REPORT_FORMAT: html
+  artifacts:
+    paths: [gl-code-quality-report.html]
