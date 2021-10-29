@@ -29,7 +29,7 @@ func (s *setupTestSuite) SetupSuite() {
 }
 
 func (s *setupTestSuite) TearDownTest() {
-	s.Require().NoError(os.Unsetenv("PAYMENTS_HTTP_SERVER_PORT"))
+	unsetEnvVars(s.Suite)
 }
 
 func (s *setupTestSuite) TestSucceed() {
@@ -56,7 +56,7 @@ func (s *setupTestSuite) TestDefaultValues() {
 
 func (s *setupTestSuite) TestMissingEnvVars() {
 	_, err := Setup(s.Logger)
-	s.Assert().NoError(err)
+	s.Assert().Error(err)
 }
 
 func (s *setupTestSuite) TestSetupWithErrors() {
@@ -82,6 +82,7 @@ func TestServerSuite(t *testing.T) {
 func (s *serverTestSuite) SetupSuite() {
 	var err error
 	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
+	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Logger = log.New(os.Stdout, "[TestServer] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 	s.Config, err = Setup(s.Logger)
 	s.Require().NoError(err)
@@ -162,9 +163,7 @@ func (s *serverTestSuite) TestServerShutdownBeforeRunning() {
 }
 
 func (s *serverTestSuite) TearDownSuite() {
-	s.Require().NoError(os.Unsetenv("PAYMENTS_HTTP_SERVER_PORT"))
-	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_SIGNING_KEY"))
-	s.Require().NoError(os.Unsetenv("PAYMENTS_CIRCUIT_BREAKER_TIMEOUT"))
+	unsetEnvVars(s.Suite)
 }
 
 type runTestSuite struct {
@@ -221,10 +220,15 @@ func (s *runTestSuite) TestRunAddressInUse() {
 }
 
 func (s *runTestSuite) TearDownSuite() {
-	s.Require().NoError(os.Unsetenv("PAYMENTS_HTTP_SERVER_PORT"))
-	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_SIGNING_KEY"))
+	unsetEnvVars(s.Suite)
 }
 
 func TestRun(t *testing.T) {
 	suite.Run(t, new(runTestSuite))
+}
+
+func unsetEnvVars(s suite.Suite) {
+	s.Require().NoError(os.Unsetenv("PAYMENTS_HTTP_SERVER_PORT"))
+	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_SIGNING_KEY"))
+	s.Require().NoError(os.Unsetenv("PAYMENTS_CIRCUIT_BREAKER_TIMEOUT"))
 }
