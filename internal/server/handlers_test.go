@@ -72,21 +72,24 @@ func (s *stripeWebhookSuite) TestWebhookEventReceived() {
 	ctx := mock.AnythingOfType("*context.timerCtx")
 	user := "test"
 
-	s.Customers.On("GetIdentity", ctx, customers.GetIdentityRequest{
-		Customer:    "cus_CDQTvYK1POcCHA",
+	s.Customers.On("GetCustomerByID", ctx, customers.GetCustomerByIDRequest{
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetIdentityResponse{
-		User:        &user,
-		Customer:    nil,
+	}).Return(customers.GetCustomerResponse{
+		Handle:      user,
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
 	}, error(nil))
 
 	s.Credits.On("IncreaseCredits", ctx, credits.IncreaseCreditsRequest{
-		User:     user,
-		Amount:   100,
-		Currency: "usd",
+		Transaction: credits.Transaction{
+			Handle:      user,
+			Application: "test",
+			Amount:      100,
+			Currency:    "usd",
+		},
 	}).Return(credits.IncreaseCreditsResponse{}, error(nil))
 
 	s.handler.ServeHTTP(rr, req)
@@ -109,11 +112,11 @@ func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
 
 	ctx := mock.AnythingOfType("*context.timerCtx")
 
-	s.Customers.On("GetIdentity", ctx, customers.GetIdentityRequest{
-		Customer:    "cus_CDQTvYK1POcCHA",
+	s.Customers.On("GetCustomerByID", ctx, customers.GetCustomerByIDRequest{
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetIdentityResponse{}, errors.New("identity service failed"))
+	}).Return(customers.GetCustomerResponse{}, errors.New("customer service failed"))
 
 	s.handler.ServeHTTP(rr, req)
 
@@ -136,21 +139,24 @@ func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
 	ctx := mock.AnythingOfType("*context.timerCtx")
 	user := "test"
 
-	s.Customers.On("GetIdentity", ctx, customers.GetIdentityRequest{
-		Customer:    "cus_CDQTvYK1POcCHA",
+	s.Customers.On("GetCustomerByID", ctx, customers.GetCustomerByIDRequest{
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetIdentityResponse{
-		User:        &user,
-		Customer:    nil,
+	}).Return(customers.GetCustomerResponse{
+		Handle:      user,
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
 	}, error(nil))
 
 	s.Credits.On("IncreaseCredits", ctx, credits.IncreaseCreditsRequest{
-		User:     user,
-		Amount:   100,
-		Currency: "usd",
+		Transaction: credits.Transaction{
+			Handle:      user,
+			Application: "test",
+			Amount:      100,
+			Currency:    "usd",
+		},
 	}).Return(credits.IncreaseCreditsResponse{}, errors.New("credits service failed"))
 
 	s.handler.ServeHTTP(rr, req)
@@ -174,21 +180,24 @@ func (s *stripeWebhookSuite) TestWebhookTimeout() {
 	ctx := mock.AnythingOfType("*context.timerCtx")
 	user := "test"
 
-	s.Customers.On("GetIdentity", ctx, customers.GetIdentityRequest{
-		Customer:    "cus_CDQTvYK1POcCHA",
+	s.Customers.On("GetCustomerByID", ctx, customers.GetCustomerByIDRequest{
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetIdentityResponse{
-		User:        &user,
-		Customer:    nil,
+	}).Return(customers.GetCustomerResponse{
+		Handle:      user,
+		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
 	}, error(nil))
 
 	s.Credits.On("IncreaseCredits", ctx, credits.IncreaseCreditsRequest{
-		User:     user,
-		Amount:   100,
-		Currency: "usd",
+		Transaction: credits.Transaction{
+			Handle:      user,
+			Application: "test",
+			Amount:      100,
+			Currency:    "usd",
+		},
 	}).Return(credits.IncreaseCreditsResponse{}, error(nil)).Run(func(args mock.Arguments) {
 		time.Sleep(1 * time.Second)
 	})
