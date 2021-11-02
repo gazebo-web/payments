@@ -19,10 +19,14 @@ gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211025184723-c418acd116dd h
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211025184723-c418acd116dd/go.mod h1:vMrAggFxuPWdFLTTPwjY3cRghnoZEexd+PfcRnddfFk=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211026173727-7c6458dbd3a4 h1:0N9sbNjf1AGiqkdaPEMzfjFanJUV0FRpxRsnfSxh4Ug=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211026173727-7c6458dbd3a4/go.mod h1:vMrAggFxuPWdFLTTPwjY3cRghnoZEexd+PfcRnddfFk=
+gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977 h1:ItH64fisVY0GSbLZ1r5rQ616At9kIXPuvF5mUGseypg=
+gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977/go.mod h1:a3S35s+1t6dl59/Rjd6qcHnRzlh/GnIwyaQDq5oQYjI=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211026171440-e18f3e07e21c h1:6iG/TYOKEcRLxFZ/UqORqYoQD6GZfbdlH1iPbeowGGg=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211026171440-e18f3e07e21c/go.mod h1:+jNTb6jJnrDXDMc6fzUI8gITHgg9xiddLlBUVRw2Ck4=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211026174015-e1def1fd18c0 h1:poeJ8CRy1MMVRkZklu5iQaLDgc+1B12CFPauNLDx9O0=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211026174015-e1def1fd18c0/go.mod h1:+jNTb6jJnrDXDMc6fzUI8gITHgg9xiddLlBUVRw2Ck4=
+gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211101182219-9ae617b94009 h1:hz4KrZhdZBEg7pe8WP/F5vSo99ACiPBIKgXl3tcTUqQ=
+gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211101182219-9ae617b94009/go.mod h1:+7P6LIiQYLJgMLRguRh20yis6hUGLdjjYQ8PBYylWd0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e h1:3G+cUijn7XD+S4eJFddp53Pv7+slrESplyjG25HgL+k=
 golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=

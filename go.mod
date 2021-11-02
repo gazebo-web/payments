@@ -7,8 +7,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.4
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go/v72 v72.72.0
-	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211026173727-7c6458dbd3a4
-	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211026174015-e1def1fd18c0
+	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977
+	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211101182219-9ae617b94009
 )
 
 require (
