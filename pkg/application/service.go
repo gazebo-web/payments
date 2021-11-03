@@ -91,13 +91,22 @@ type Service interface {
 	api.PaymentsV1
 }
 
-// Options
+// Options contains a set of components needed to configure the payment service.
 type Options struct {
-	Credits   credits.CreditsV1
+	// Credits holds a credits.CreditsV1 client implementation.
+	Credits credits.CreditsV1
+
+	// Customers holds a customers.CustomersV1 client implementation.
 	Customers customers.CustomersV1
-	Stripe    *client.API
-	Logger    *log.Logger
-	Timeout   time.Duration
+
+	// Stripe holds a stripe API client.
+	Stripe *client.API
+
+	// Logger contains a logger mechanism. If set to nil, it defaults to a logger pointing to io.Discard.
+	Logger *log.Logger
+
+	// Timeout contains a circuit breaking timeout used to prevent long process runs.
+	Timeout time.Duration
 }
 
 // NewPaymentsService initializes a new Service implementation using Stripe.
