@@ -26,6 +26,7 @@ const (
 	PaymentServiceStripe PaymentService = "stripe"
 )
 
+// Validate validates the current payment service.
 func (ps PaymentService) Validate() error {
 	if len(ps) == 0 {
 		return ErrEmptyService
@@ -89,6 +90,7 @@ type CreateSessionRequest struct {
 	CancelURL string `json:"cancel_url"`
 }
 
+// Validate validates the current request.
 func (r CreateSessionRequest) Validate() error {
 	if err := r.Service.Validate(); err != nil {
 		return err
