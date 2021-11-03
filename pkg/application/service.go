@@ -29,8 +29,8 @@ func (s *service) Charge(ctx context.Context, req api.ChargeRequest) (api.Charge
 	ch := make(chan api.ChargeResponse, 1)
 	errs := make(chan error, 1)
 	go func() {
-		identityResponse, err := s.customers.GetIdentity(ctx, customers.GetIdentityRequest{
-			Customer:    req.Customer,
+		customerResponse, err := s.customers.GetCustomerByID(ctx, customers.GetCustomerByIDRequest{
+			ID:          req.Customer,
 			Service:     string(req.Service),
 			Application: req.Application,
 		})
@@ -40,9 +40,12 @@ func (s *service) Charge(ctx context.Context, req api.ChargeRequest) (api.Charge
 		}
 
 		_, err = s.credits.IncreaseCredits(ctx, credits.IncreaseCreditsRequest{
-			User:     *identityResponse.User,
-			Amount:   req.Amount,
-			Currency: req.Currency,
+			Transaction: credits.Transaction{
+				Handle:      customerResponse.Handle,
+				Amount:      req.Amount,
+				Currency:    req.Currency,
+				Application: req.Application,
+			},
 		})
 		if err != nil {
 			errs <- err
