@@ -3,8 +3,10 @@ package application
 import (
 	"context"
 	"github.com/stretchr/testify/suite"
+	"github.com/stripe/stripe-go/v72/client"
 	fakecredits "gitlab.com/ignitionrobotics/billing/credits/pkg/fake"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
+	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"testing"
 	"time"
@@ -15,6 +17,8 @@ type serviceTestSuite struct {
 	Credits   *fakecredits.Fake
 	Customers *fakecustomers.Fake
 	Service   Service
+	Stripe    *client.API
+	StripeURL string
 }
 
 func TestPaymentsService(t *testing.T) {
@@ -24,7 +28,18 @@ func TestPaymentsService(t *testing.T) {
 func (s *serviceTestSuite) SetupTest() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
-	s.Service = NewPaymentsService(s.Credits, s.Customers, nil, 200*time.Millisecond)
+	s.StripeURL = "http://stripe:12111"
+
+	var cfg conf.Config
+	s.Require().NoError(cfg.Parse())
+
+	s.Stripe = NewStripeClient(cfg.Stripe)
+	s.Service = NewPaymentsService(Options{
+		Credits:   s.Credits,
+		Customers: s.Customers,
+		Stripe:    s.Stripe,
+		Timeout:   200 * time.Millisecond,
+	})
 }
 
 func (s *serviceTestSuite) TestCreateSessionServiceIsEmpty() {

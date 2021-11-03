@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"github.com/stripe/stripe-go/v72/client"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
@@ -15,6 +16,7 @@ type service struct {
 	logger    *log.Logger
 	credits   credits.CreditsV1
 	customers customers.CustomersV1
+	stripe    *client.API
 	timeout   time.Duration
 }
 
@@ -74,6 +76,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 	if err := req.Validate(); err != nil {
 		return api.CreateSessionResponse{}, err
 	}
+
 	return api.CreateSessionResponse{}, nil
 }
 
@@ -88,15 +91,25 @@ type Service interface {
 	api.PaymentsV1
 }
 
+// Options
+type Options struct {
+	Credits   credits.CreditsV1
+	Customers customers.CustomersV1
+	Stripe    *client.API
+	Logger    *log.Logger
+	Timeout   time.Duration
+}
+
 // NewPaymentsService initializes a new Service implementation using Stripe.
-func NewPaymentsService(credits credits.CreditsV1, customers customers.CustomersV1, logger *log.Logger, timeout time.Duration) Service {
-	if logger == nil {
-		logger = log.New(io.Discard, "", log.LstdFlags)
+func NewPaymentsService(opts Options) Service {
+	if opts.Logger == nil {
+		opts.Logger = log.New(io.Discard, "", log.LstdFlags)
 	}
 	return &service{
-		logger:    logger,
-		credits:   credits,
-		customers: customers,
-		timeout:   timeout,
+		logger:    opts.Logger,
+		credits:   opts.Credits,
+		customers: opts.Customers,
+		timeout:   opts.Timeout,
+		stripe:    opts.Stripe,
 	}
 }
