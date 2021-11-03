@@ -3,18 +3,19 @@ package application
 import (
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/client"
+	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
 )
 
-// NewStripeClient initializes a new Stripe client that will use the given key to connect to the given URL.
-// 	The URL is usually provided when testing locally (using stripe-mock), the default option (nil) points to the
-// 	production Stripe API.
-// 	If you want to run tests on the production Stripe API, use the testing key provided in the Stripe Dashboard,
-// 	and keep the URL set to nil.
-func NewStripeClient(key string, url *string) *client.API {
-	config := stripe.BackendConfig{
-		URL: url,
+// NewStripeClient initializes a new Stripe client using the provided conf.Stripe config.
+func NewStripeClient(cfg conf.Stripe) *client.API {
+	var backendURL *string
+	if len(cfg.URL) > 0 {
+		backendURL = &cfg.URL
 	}
-	return client.New(key, &stripe.Backends{
+	config := stripe.BackendConfig{
+		URL: backendURL,
+	}
+	return client.New(cfg.SecretKey, &stripe.Backends{
 		API:     stripe.GetBackendWithConfig(stripe.APIBackend, &config),
 		Connect: stripe.GetBackendWithConfig(stripe.ConnectBackend, &config),
 		Uploads: stripe.GetBackendWithConfig(stripe.UploadsBackend, &config),
