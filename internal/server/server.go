@@ -31,8 +31,17 @@ func Run(config conf.Config, logger *log.Logger) error {
 	logger.Println("Initializing Customers HTTP client")
 	customersClient := customers.NewClient()
 
+	logger.Println("Initializing Stripe client")
+	stripeClient := application.NewStripeClient(config.Stripe)
+
 	logger.Println("Initializing Payments service")
-	ps := application.NewPaymentsService(creditsClient, customersClient, logger, config.Timeout)
+	ps := application.NewPaymentsService(application.Options{
+		Credits:   creditsClient,
+		Customers: customersClient,
+		Stripe:    stripeClient,
+		Logger:    logger,
+		Timeout:   config.Timeout,
+	})
 
 	logger.Println("Initializing HTTP server")
 	s := NewServer(Options{
@@ -105,7 +114,7 @@ func NewServer(opts Options) *Server {
 		payments:                opts.payments,
 		logger:                  opts.logger,
 		port:                    opts.config.Port,
-		webhookStripeSigningKey: opts.config.StripeSigningKey,
+		webhookStripeSigningKey: opts.config.Stripe.SigningKey,
 	}
 
 	s.router = chi.NewRouter()

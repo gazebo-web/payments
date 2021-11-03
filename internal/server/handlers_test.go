@@ -39,21 +39,39 @@ func TestStripeWebhookSuite(t *testing.T) {
 	suite.Run(t, new(stripeWebhookSuite))
 }
 
-func (s *stripeWebhookSuite) SetupTest() {
+func (s *stripeWebhookSuite) SetupSuite() {
 	s.Logger = log.New(os.Stdout, "[TestStripeWebhook] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 
+	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
+	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "whsec_test1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_URL", "https://localhost"))
+}
+
+func (s *stripeWebhookSuite) SetupTest() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
-	s.Payments = application.NewPaymentsService(s.Credits, s.Customers, s.Logger, 200*time.Millisecond)
+	s.Payments = application.NewPaymentsService(application.Options{
+		Credits:   s.Credits,
+		Customers: s.Customers,
+		Stripe:    nil,
+		Logger:    s.Logger,
+		Timeout:   200 * time.Millisecond,
+	})
+
+	var cfg conf.Config
+	s.Require().NoError(cfg.Parse())
+
 	s.Server = NewServer(Options{
-		config: conf.Config{
-			Port:             80,
-			StripeSigningKey: "whsec_test1234",
-		},
+		config:   cfg,
 		payments: s.Payments,
 		logger:   s.Logger,
 	})
 	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+}
+
+func (s *stripeWebhookSuite) TearDownSuite() {
+	unsetEnvVars(s.Suite)
 }
 
 func (s *stripeWebhookSuite) TestWebhookEventReceived() {
