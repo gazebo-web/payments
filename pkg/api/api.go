@@ -2,6 +2,20 @@ package api
 
 import (
 	"context"
+	"errors"
+)
+
+var (
+	// ErrEmptyService is returned when the service provided is empty.
+	ErrEmptyService = errors.New("empty service")
+
+	// ErrInvalidService is returned when an invalid service is used.
+	ErrInvalidService = errors.New("invalid service")
+
+	// ErrEmptyCallbacks is returned when either (or both) of the callback URLs are empty.
+	ErrEmptyCallbacks = errors.New("empty callbacks")
+
+	ErrInvalidURL = errors.New("invalid URL")
 )
 
 // PaymentService identifies different payment services such as Stripe, PayPal, and more.
@@ -12,8 +26,18 @@ const (
 	PaymentServiceStripe PaymentService = "stripe"
 )
 
+func (ps PaymentService) Validate() error {
+	if len(ps) == 0 {
+		return ErrEmptyService
+	}
+	if ps != PaymentServiceStripe {
+		return ErrInvalidService
+	}
+	return nil
+}
+
 // ChargerV1 contains methods that should be called after charging a certain amount of money to a user.
-// This interface is private to the payment service and should only be called from a webhook 
+// This interface is private to the payment service and should only be called from a webhook
 // after a payment system event is processed.
 type ChargerV1 interface {
 	// Charge charges a certain amount of money to a given user.
@@ -54,7 +78,35 @@ type PaymentsV1 interface {
 }
 
 // CreateSessionRequest is the input for the PaymentsV1.CreateSession method.
-type CreateSessionRequest struct{}
+type CreateSessionRequest struct {
+	// Service contains the name of the payment service that should be used to start a transaction session.
+	Service PaymentService `json:"service"`
+
+	// SuccessURL is the URL where to redirect a checkout process when it succeeds.
+	SuccessURL string `json:"success_url"`
+
+	// CancelURL is the URL where to redirect a checkout process when it fails.
+	CancelURL string `json:"cancel_url"`
+}
+
+func (r CreateSessionRequest) Validate() error {
+	if err := r.Service.Validate(); err != nil {
+		return err
+	}
+	if len(r.SuccessURL) == 0 || len(r.CancelURL) == 0 {
+		return ErrEmptyCallbacks
+	}
+
+	if err := validateURL(r.SuccessURL); err != nil {
+		return err
+	}
+
+	if err := validateURL(r.CancelURL); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // CreateSessionResponse is the output of the PaymentsV1.CreateSession method.
 type CreateSessionResponse struct{}

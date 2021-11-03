@@ -71,7 +71,10 @@ func (s *service) Charge(ctx context.Context, req api.ChargeRequest) (api.Charge
 // CreateSession creates a session for a user to pay for a certain product or service.
 // This token is intended to allow external interfaces to interact with the payment provider on behalf of the user.
 func (s *service) CreateSession(ctx context.Context, req api.CreateSessionRequest) (api.CreateSessionResponse, error) {
-	panic("implement me")
+	if err := req.Validate(); err != nil {
+		return api.CreateSessionResponse{}, err
+	}
+	return api.CreateSessionResponse{}, nil
 }
 
 // ListInvoices returns a list of invoices of the given user.
