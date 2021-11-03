@@ -5,10 +5,14 @@ import (
 	"time"
 )
 
+// Stripe contains the needed config to interact with the stripe API.
 type Stripe struct {
+	// SigningKey is the key used when checking webhook event signatures.
 	SigningKey string `env:"PAYMENTS_STRIPE_SIGNING_KEY,required"`
-	SecretKey  string `env:"PAYMENTS_STRIPE_SECRET_KEY,required"`
-	URL        string `env:"PAYMENTS_STRIPE_URL"`
+	// SecretKey is the key used to allow the stripe client use the stripe API.
+	SecretKey string `env:"PAYMENTS_STRIPE_SECRET_KEY,required"`
+	// URL is the backend stripe API url, only used for testing purposes.
+	URL string `env:"PAYMENTS_STRIPE_URL"`
 }
 
 // Parse fills Stripe data from an external source.
