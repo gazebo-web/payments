@@ -28,7 +28,6 @@ func TestPaymentsService(t *testing.T) {
 func (s *serviceTestSuite) SetupTest() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
-	s.StripeURL = "http://stripe:12111"
 
 	var cfg conf.Config
 	s.Require().NoError(cfg.Parse())
