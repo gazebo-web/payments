@@ -98,3 +98,14 @@ func (s *serviceTestSuite) TestCreateSessionURLsMalformed() {
 	})
 	s.Assert().Error(err)
 }
+
+func (s *serviceTestSuite) TestCreateSessionEmptyHandle() {
+	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:    api.PaymentServiceStripe,
+		SuccessURL: "https://localhost",
+		CancelURL:  "https://localhost",
+		Handle:     "",
+	})
+	s.Assert().Error(err)
+	s.Assert().Equal(err, api.ErrEmptyHandle)
+}

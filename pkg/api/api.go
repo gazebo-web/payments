@@ -16,6 +16,8 @@ var (
 	ErrEmptyCallbacks = errors.New("empty callbacks")
 
 	ErrInvalidURL = errors.New("invalid URL")
+
+	ErrEmptyHandle = errors.New("empty handle")
 )
 
 // PaymentService identifies different payment services such as Stripe, PayPal, and more.
@@ -88,6 +90,10 @@ type CreateSessionRequest struct {
 
 	// CancelURL is the URL where to redirect a checkout process when it fails.
 	CancelURL string `json:"cancel_url"`
+
+	// Handle is the customer identity in the context of a certain application.
+	// E.g. application username, application organization name.
+	Handle string `json:"handle"`
 }
 
 // Validate validates the current request.
@@ -105,6 +111,10 @@ func (r CreateSessionRequest) Validate() error {
 
 	if err := validateURL(r.CancelURL); err != nil {
 		return err
+	}
+
+	if len(r.Handle) == 0 {
+		return ErrEmptyHandle
 	}
 
 	return nil
