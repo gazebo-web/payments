@@ -86,6 +86,17 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 			errs <- err
 			return
 		}
+
+		_, err := s.customers.GetCustomerByHandle(ctx, customers.GetCustomerByHandleRequest{
+			Handle:      req.Handle,
+			Service:     string(api.PaymentServiceStripe),
+			Application: req.Application,
+		})
+		if err != nil {
+			errs <- err
+			return
+		}
+
 		ch <- api.CreateSessionResponse{}
 	}()
 

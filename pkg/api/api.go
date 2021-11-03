@@ -18,6 +18,8 @@ var (
 	ErrInvalidURL = errors.New("invalid URL")
 
 	ErrEmptyHandle = errors.New("empty handle")
+
+	ErrEmptyApplication = errors.New("empty application")
 )
 
 // PaymentService identifies different payment services such as Stripe, PayPal, and more.
@@ -94,6 +96,9 @@ type CreateSessionRequest struct {
 	// Handle is the customer identity in the context of a certain application.
 	// E.g. application username, application organization name.
 	Handle string `json:"handle"`
+
+	// Application is the application that originated the creation of this session.
+	Application string `json:"application"`
 }
 
 // Validate validates the current request.
@@ -115,6 +120,10 @@ func (r CreateSessionRequest) Validate() error {
 
 	if len(r.Handle) == 0 {
 		return ErrEmptyHandle
+	}
+
+	if len(r.Application) == 0 {
+		return ErrEmptyApplication
 	}
 
 	return nil

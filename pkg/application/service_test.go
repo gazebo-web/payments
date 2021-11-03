@@ -2,9 +2,12 @@ package application
 
 import (
 	"context"
+	"errors"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/stripe/stripe-go/v72/client"
 	fakecredits "gitlab.com/ignitionrobotics/billing/credits/pkg/fake"
+	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
@@ -108,4 +111,34 @@ func (s *serviceTestSuite) TestCreateSessionEmptyHandle() {
 	})
 	s.Assert().Error(err)
 	s.Assert().Equal(err, api.ErrEmptyHandle)
+}
+
+func (s *serviceTestSuite) TestCreateSessionEmptyApplication() {
+	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "",
+	})
+	s.Assert().Error(err)
+	s.Assert().Equal(err, api.ErrEmptyApplication)
+}
+
+func (s *serviceTestSuite) TestCreateSessionCustomerFailed() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+	}).Return(customers.GetCustomerResponse{}, errors.New("customer service failed"))
+
+	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "test",
+	})
+	s.Assert().Error(err)
 }
