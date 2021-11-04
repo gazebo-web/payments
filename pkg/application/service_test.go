@@ -142,7 +142,7 @@ func (s *serviceTestSuite) TestCreateSessionCustomerFailed() {
 	s.Assert().Error(err)
 }
 
-func (s *serviceTestSuite) TestCreateSessionOK() {
+func (s *serviceTestSuite) TestCreateSessionOKWithCustomerCreation() {
 	ctx := mock.AnythingOfType("*context.timerCtx")
 	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
 		Handle:      "test",
@@ -151,6 +151,32 @@ func (s *serviceTestSuite) TestCreateSessionOK() {
 	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
 
 	s.Customers.On("CreateCustomer", ctx, mock.AnythingOfType("api.CreateCustomerRequest")).Return(customers.CustomerResponse{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+		ID:          "cus_HdRJTeoStCxpP4E",
+	}, error(nil))
+
+	res, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "test",
+	})
+	s.Require().NoError(err)
+
+	s.Assert().Equal(api.PaymentServiceStripe, res.Service)
+	s.Assert().NotEmpty(res.Session)
+}
+
+func (s *serviceTestSuite) TestCreateSessionOK() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+	}).Return(customers.CustomerResponse{
 		Handle:      "test",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
