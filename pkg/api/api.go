@@ -130,7 +130,11 @@ func (r CreateSessionRequest) Validate() error {
 }
 
 // CreateSessionResponse is the output of the PaymentsV1.CreateSession method.
-type CreateSessionResponse struct{}
+type CreateSessionResponse struct {
+	Service PaymentService `json:"service"`
+
+	Session string `json:"session"`
+}
 
 // ListInvoicesRequest is the input for the PaymentsV1.ListInvoices method.
 type ListInvoicesRequest struct{}

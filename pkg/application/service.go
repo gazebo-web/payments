@@ -2,6 +2,8 @@ package application
 
 import (
 	"context"
+	"fmt"
+	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/client"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
@@ -87,17 +89,30 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 			return
 		}
 
-		_, err := s.customers.GetCustomerByHandle(ctx, customers.GetCustomerByHandleRequest{
+		customerResponse, err := s.customers.GetCustomerByHandle(ctx, customers.GetCustomerByHandleRequest{
 			Handle:      req.Handle,
 			Service:     string(api.PaymentServiceStripe),
 			Application: req.Application,
 		})
+		if err != nil && err != customers.ErrCustomerNotFound {
+			errs <- err
+			return
+		}
+
+		if err == customers.ErrCustomerNotFound {
+			if customerResponse, err = s.createCustomer(ctx, req); err != nil {
+				errs <- err
+				return
+			}
+		}
+
+		res, err := s.createStripeSession(req, customerResponse)
 		if err != nil {
 			errs <- err
 			return
 		}
 
-		ch <- api.CreateSessionResponse{}
+		ch <- res
 	}()
 
 	select {
@@ -116,6 +131,74 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 // ListInvoices returns a list of invoices of the given user.
 func (s *service) ListInvoices(ctx context.Context, req api.ListInvoicesRequest) (api.ListInvoicesResponse, error) {
 	panic("implement me")
+}
+
+func (s *service) createStripeSession(req api.CreateSessionRequest, cus customers.CustomerResponse) (api.CreateSessionResponse, error) {
+	session, err := s.stripe.CheckoutSessions.New(&stripe.CheckoutSessionParams{
+		SuccessURL: &req.SuccessURL,
+		CancelURL:  &req.CancelURL,
+		PaymentMethodTypes: stripe.StringSlice([]string{
+			"card",
+		}),
+		Customer: stripe.String(cus.ID),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{
+				Quantity: stripe.Int64(1),
+				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
+					Enabled: stripe.Bool(true),
+					Maximum: stripe.Int64(1000), // Max amount of credits to buy
+					Minimum: stripe.Int64(1),    // Min amount of credits to buy
+				},
+				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+					Currency: stripe.String("usd"),
+					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+						Name: stripe.String("Credits"),
+					},
+					UnitAmount: stripe.Int64(100), // Price per credit
+				},
+			},
+		},
+		Params: stripe.Params{
+			Metadata: map[string]string{
+				"application": req.Application, // Used by webhooks
+			},
+		},
+	})
+	if err != nil {
+		return api.CreateSessionResponse{}, err
+	}
+	return api.CreateSessionResponse{
+		Service: req.Service,
+		Session: session.ID,
+	}, nil
+}
+
+func (s *service) createCustomer(ctx context.Context, req api.CreateSessionRequest) (customers.CustomerResponse, error) {
+	id, err := s.createStripeCustomer(req)
+	if err != nil {
+		return customers.CustomerResponse{}, err
+	}
+
+	customerResponse, err := s.customers.CreateCustomer(ctx, customers.CreateCustomerRequest{
+		ID:          id,
+		Handle:      req.Handle,
+		Service:     string(api.PaymentServiceStripe),
+		Application: req.Application,
+	})
+	if err != nil {
+		return customers.CustomerResponse{}, err
+	}
+	return customerResponse, nil
+}
+
+func (s *service) createStripeCustomer(req api.CreateSessionRequest) (string, error) {
+	c, err := s.stripe.Customers.New(&stripe.CustomerParams{
+		Description: stripe.String(fmt.Sprintf("Customer (%s) created for application: %s", req.Handle, req.Application)),
+	})
+	if err != nil {
+		return "", nil
+	}
+	return c.ID, nil
 }
 
 // Service holds methods to interact with different payments systems.

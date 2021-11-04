@@ -22,8 +22,8 @@ github.com/stripe/stripe-go/v72 v72.72.0 h1:krEsHTSSJF1I+PTHX99MkmSHKHc4+9Fq8qpQ
 github.com/stripe/stripe-go/v72 v72.72.0/go.mod h1:QwqJQtduHubZht9mek5sds9CtQcKFdsykV9ZepRWwo0=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977 h1:ItH64fisVY0GSbLZ1r5rQ616At9kIXPuvF5mUGseypg=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977/go.mod h1:a3S35s+1t6dl59/Rjd6qcHnRzlh/GnIwyaQDq5oQYjI=
-gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104163621-216f66093880 h1:kgm0eumZogQaF53IeoZdeSO+w7eKUEEtBd3Ru41RISw=
-gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104163621-216f66093880/go.mod h1:+7P6LIiQYLJgMLRguRh20yis6hUGLdjjYQ8PBYylWd0=
+gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e h1:SaVmiatOQJ3m5VOM1MJFX/jb3YsNlfsB6xQGhRHQ558=
+gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e/go.mod h1:+7P6LIiQYLJgMLRguRh20yis6hUGLdjjYQ8PBYylWd0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e h1:3G+cUijn7XD+S4eJFddp53Pv7+slrESplyjG25HgL+k=
 golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=

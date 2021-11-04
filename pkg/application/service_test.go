@@ -21,7 +21,6 @@ type serviceTestSuite struct {
 	Customers *fakecustomers.Fake
 	Service   Service
 	Stripe    *client.API
-	StripeURL string
 }
 
 func TestPaymentsService(t *testing.T) {
@@ -131,7 +130,7 @@ func (s *serviceTestSuite) TestCreateSessionCustomerFailed() {
 		Handle:      "test",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{}, errors.New("customer service failed"))
+	}).Return(customers.CustomerResponse{}, errors.New("customer service failed"))
 
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:     api.PaymentServiceStripe,
@@ -141,4 +140,17 @@ func (s *serviceTestSuite) TestCreateSessionCustomerFailed() {
 		Application: "test",
 	})
 	s.Assert().Error(err)
+}
+
+func (s *serviceTestSuite) TestCreateSessionShouldCreateCustomerIfNotFound() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
+
+	s.Customers.On("CreateCustomer", ctx, customers.CreateCustomerRequest{
+		Handle: "",
+	})
 }

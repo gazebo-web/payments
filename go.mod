@@ -8,7 +8,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go/v72 v72.72.0
 	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977
-	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104163621-216f66093880
+	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e
 )
 
 require (
