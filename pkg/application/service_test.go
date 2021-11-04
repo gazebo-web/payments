@@ -151,6 +151,8 @@ func (s *serviceTestSuite) TestCreateSessionShouldCreateCustomerIfNotFound() {
 	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
 
 	s.Customers.On("CreateCustomer", ctx, customers.CreateCustomerRequest{
-		Handle: "",
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
 	})
 }

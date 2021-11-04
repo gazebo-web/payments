@@ -94,7 +94,7 @@ func (s *stripeWebhookSuite) TestWebhookEventReceived() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{
+	}).Return(customers.CustomerResponse{
 		Handle:      user,
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
@@ -134,7 +134,7 @@ func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{}, errors.New("customer service failed"))
+	}).Return(customers.CustomerResponse{}, errors.New("customer service failed"))
 
 	s.handler.ServeHTTP(rr, req)
 
@@ -161,7 +161,7 @@ func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{
+	}).Return(customers.CustomerResponse{
 		Handle:      user,
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
@@ -202,7 +202,7 @@ func (s *stripeWebhookSuite) TestWebhookTimeout() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{
+	}).Return(customers.CustomerResponse{
 		Handle:      user,
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
