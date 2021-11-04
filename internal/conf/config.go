@@ -9,8 +9,10 @@ import (
 type Stripe struct {
 	// SigningKey is the key used when checking webhook event signatures.
 	SigningKey string `env:"PAYMENTS_STRIPE_SIGNING_KEY,required"`
+
 	// SecretKey is the key used to allow the stripe client use the stripe API.
 	SecretKey string `env:"PAYMENTS_STRIPE_SECRET_KEY,required"`
+
 	// URL is the backend stripe API url, only used for testing purposes.
 	URL string `env:"PAYMENTS_STRIPE_URL"`
 }
