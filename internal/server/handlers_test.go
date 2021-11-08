@@ -54,7 +54,7 @@ func (s *stripeWebhookSuite) SetupTest() {
 	s.Payments = application.NewPaymentsService(application.Options{
 		Credits:   s.Credits,
 		Customers: s.Customers,
-		Stripe:    nil,
+		Adapter:   nil,
 		Logger:    s.Logger,
 		Timeout:   200 * time.Millisecond,
 	})

@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"github.com/stretchr/testify/suite"
-	"github.com/stripe/stripe-go/v72/client"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	fakecredits "gitlab.com/ignitionrobotics/billing/credits/pkg/fake"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/client"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
+	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
 	"log"
 	"os"
@@ -73,12 +73,12 @@ func (s *setupTestSuite) TestSetupWithErrors() {
 
 type serverTestSuite struct {
 	suite.Suite
-	Logger       *log.Logger
-	Config       conf.Config
-	Payments     application.Service
-	Credits      credits.Client
-	Customers    customers.Client
-	StripeClient *client.API
+	Logger    *log.Logger
+	Config    conf.Config
+	Payments  application.Service
+	Credits   credits.Client
+	Customers customers.Client
+	Adapter   adapter.Client
 }
 
 func TestServerSuite(t *testing.T) {
@@ -97,12 +97,12 @@ func (s *serverTestSuite) SetupSuite() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
 
-	s.StripeClient = application.NewStripeClient(s.Config.Stripe)
+	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
 
 	s.Payments = application.NewPaymentsService(application.Options{
 		Credits:   s.Credits,
 		Customers: s.Customers,
-		Stripe:    nil,
+		Adapter:   s.Adapter,
 		Logger:    s.Logger,
 		Timeout:   10 * time.Second,
 	})
@@ -184,12 +184,12 @@ func (s *serverTestSuite) TearDownSuite() {
 
 type runTestSuite struct {
 	suite.Suite
-	Logger       *log.Logger
-	Config       conf.Config
-	Credits      credits.Client
-	Payments     application.Service
-	Customers    customers.Client
-	StripeClient *client.API
+	Logger    *log.Logger
+	Config    conf.Config
+	Credits   credits.Client
+	Payments  application.Service
+	Customers customers.Client
+	Adapter   adapter.Client
 }
 
 func (s *runTestSuite) SetupSuite() {
@@ -203,12 +203,12 @@ func (s *runTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Credits = credits.NewClient()
 	s.Customers = customers.NewClient()
-	s.StripeClient = application.NewStripeClient(s.Config.Stripe)
+	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
 
 	s.Payments = application.NewPaymentsService(application.Options{
 		Credits:   s.Credits,
 		Customers: s.Customers,
-		Stripe:    s.StripeClient,
+		Adapter:   s.Adapter,
 		Logger:    s.Logger,
 		Timeout:   10 * time.Second,
 	})
