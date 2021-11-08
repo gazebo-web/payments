@@ -66,6 +66,7 @@ func (s *stripeWebhookSuite) SetupTest() {
 		config:   cfg,
 		payments: s.Payments,
 		logger:   s.Logger,
+		adapter:  s.Adapter,
 	})
 	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
 }
@@ -82,7 +83,7 @@ func (s *stripeWebhookSuite) TestWebhookEventReceived() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -123,7 +124,7 @@ func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -149,7 +150,7 @@ func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -190,7 +191,7 @@ func (s *stripeWebhookSuite) TestWebhookTimeout() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -233,14 +234,14 @@ func (s *stripeWebhookSuite) TestWebhookEventFailed() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
 
 	s.handler.ServeHTTP(rr, req)
 
-	s.Assert().Equal(http.StatusBadRequest, rr.Code)
+	s.Assert().Equal(http.StatusInternalServerError, rr.Code)
 }
 
 func (s *stripeWebhookSuite) prepareEvent(eventType string, status stripe.PaymentIntentStatus) ([]byte, time.Time) {

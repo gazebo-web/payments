@@ -22,11 +22,17 @@ func (s *Server) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	s.logger.Println("Reading request body")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		s.logger.Println("Failed to read body:", err)
 		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusInternalServerError), "Failed to read body"), http.StatusInternalServerError)
 		return
 	}
 
 	req, err := s.adapter.GenerateChargeRequest(body, r.Header)
+	if err != nil {
+		s.logger.Println("Failed to generate charge request:", err)
+		http.Error(w, fmt.Sprintf("%s - %s: %v", http.StatusText(http.StatusInternalServerError), "Failed to generate charge request", err), http.StatusInternalServerError)
+		return
+	}
 
 	_, err = s.payments.Charge(r.Context(), req)
 	if err != nil {
