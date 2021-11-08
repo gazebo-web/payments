@@ -15,6 +15,7 @@ import (
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
+	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
 	"log"
@@ -33,6 +34,8 @@ type stripeWebhookSuite struct {
 	Payments  application.Service
 	Logger    *log.Logger
 	handler   http.Handler
+	Adapter   adapter.Client
+	Config    conf.Config
 }
 
 func TestStripeWebhookSuite(t *testing.T) {
@@ -41,20 +44,17 @@ func TestStripeWebhookSuite(t *testing.T) {
 
 func (s *stripeWebhookSuite) SetupSuite() {
 	s.Logger = log.New(os.Stdout, "[TestStripeWebhook] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
-
-	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
-	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "whsec_test1234"))
-	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
-	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_URL", "https://localhost"))
+	s.Require().NoError(s.Config.Parse())
 }
 
 func (s *stripeWebhookSuite) SetupTest() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
+	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
 	s.Payments = application.NewPaymentsService(application.Options{
 		Credits:   s.Credits,
 		Customers: s.Customers,
-		Adapter:   nil,
+		Adapter:   s.Adapter,
 		Logger:    s.Logger,
 		Timeout:   200 * time.Millisecond,
 	})
