@@ -7,6 +7,7 @@ import (
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/client"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
+	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
 	"log"
 	"net/http"
@@ -31,14 +32,14 @@ func Run(config conf.Config, logger *log.Logger) error {
 	logger.Println("Initializing Customers HTTP client")
 	customersClient := customers.NewClient()
 
-	logger.Println("Initializing Stripe client")
-	stripeClient := application.NewStripeClient(config.Stripe)
+	logger.Println("Initializing Stripe adapter")
+	stripeAdapter := adapter.NewStripeAdapter(config.Stripe)
 
 	logger.Println("Initializing Payments service")
 	ps := application.NewPaymentsService(application.Options{
 		Credits:   creditsClient,
 		Customers: customersClient,
-		Stripe:    stripeClient,
+		Adapter:   stripeAdapter,
 		Logger:    logger,
 		Timeout:   config.Timeout,
 	})
@@ -62,6 +63,7 @@ type Options struct {
 	config   conf.Config
 	payments application.Service
 	logger   *log.Logger
+	adapter  adapter.Client
 }
 
 // Server is an HTTP web server used to expose api.PaymentsV1 endpoints. It prepares the input for each
@@ -79,11 +81,12 @@ type Server struct {
 	// port is the HTTP port used to listen for incoming requests.
 	port uint
 
-	// webhookStripeSigningKey is the stripe key used to validate incoming events.
-	webhookStripeSigningKey string
-
 	// httpServer is used to serve the router with fine-grained control of ListenAndServe and Shutdown operations.
 	httpServer http.Server
+
+	// adapter is used to generate charge requests from incoming webhook events. It contains an adapter implementation
+	// such as Stripe.
+	adapter adapter.Client
 }
 
 // ListenAndServe starts listening in the port defined on conf.Config. It's in charge of serving the different endpoints.
@@ -111,10 +114,10 @@ func (s *Server) getAddress() string {
 // NewServer initializes a new web server that will serve api.PaymentsV1 and api.ChargerV1 methods.
 func NewServer(opts Options) *Server {
 	s := Server{
-		payments:                opts.payments,
-		logger:                  opts.logger,
-		port:                    opts.config.Port,
-		webhookStripeSigningKey: opts.config.Stripe.SigningKey,
+		payments: opts.payments,
+		logger:   opts.logger,
+		port:     opts.config.Port,
+		adapter:  opts.adapter,
 	}
 
 	s.router = chi.NewRouter()

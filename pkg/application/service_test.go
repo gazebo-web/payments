@@ -5,11 +5,11 @@ import (
 	"errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"github.com/stripe/stripe-go/v72/client"
 	fakecredits "gitlab.com/ignitionrobotics/billing/credits/pkg/fake"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
+	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"testing"
 	"time"
@@ -20,7 +20,7 @@ type serviceTestSuite struct {
 	Credits   *fakecredits.Fake
 	Customers *fakecustomers.Fake
 	Service   Service
-	Stripe    *client.API
+	Adapter   adapter.Client
 }
 
 func TestPaymentsService(t *testing.T) {
@@ -34,11 +34,11 @@ func (s *serviceTestSuite) SetupTest() {
 	var cfg conf.Config
 	s.Require().NoError(cfg.Parse())
 
-	s.Stripe = NewStripeClient(cfg.Stripe)
+	s.Adapter = adapter.NewStripeAdapter(cfg.Stripe)
 	s.Service = NewPaymentsService(Options{
 		Credits:   s.Credits,
 		Customers: s.Customers,
-		Stripe:    s.Stripe,
+		Adapter:   s.Adapter,
 		Timeout:   200 * time.Millisecond,
 	})
 }
