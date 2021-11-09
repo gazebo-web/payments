@@ -27,11 +27,11 @@ type Config struct {
 	// Stripe contains configuration for the stripe client.
 	Stripe Stripe
 
-	// Port is the TCP port where to listen to for incoming HTTP requests.
+	// Port is the TCP port to listen to for incoming HTTP requests.
 	Port uint `env:"PAYMENTS_HTTP_SERVER_PORT" envDefault:"80"`
 
-	// Timeout is used as the amount of time requests originated from the payments service should wait until it should
-	// perform a circuit break.
+	// Timeout is used as the amount of time requests originated from the payments service should wait until it fails due
+	// to timeout.
 	Timeout time.Duration `env:"PAYMENTS_CIRCUIT_BREAKER_TIMEOUT" envDefault:"30s"`
 }
 
