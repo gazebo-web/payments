@@ -15,10 +15,13 @@ var (
 	// ErrEmptyCallbacks is returned when either (or both) of the callback URLs are empty.
 	ErrEmptyCallbacks = errors.New("empty callbacks")
 
+	// ErrInvalidURL is returned when an invalid URL callback value is passed on a request.
 	ErrInvalidURL = errors.New("invalid URL")
 
+	// ErrEmptyHandle is returned when an empty handle value is passed on a request.
 	ErrEmptyHandle = errors.New("empty handle")
 
+	// ErrEmptyApplication is returned when an empty application value is passed on a request.
 	ErrEmptyApplication = errors.New("empty application")
 )
 
@@ -131,8 +134,10 @@ func (r CreateSessionRequest) Validate() error {
 
 // CreateSessionResponse is the output of the PaymentsV1.CreateSession method.
 type CreateSessionResponse struct {
+	// Service contains the name of the service where the transaction is taking place.
 	Service PaymentService `json:"service"`
 
+	// Session is the ID of the session created for this transaction.
 	Session string `json:"session"`
 }
 
