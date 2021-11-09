@@ -130,7 +130,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 		s.logger.Println("Failed to process charge:", err)
 		return api.CreateSessionResponse{}, err
 	case res := <-ch: // Post-processing
-		s.logger.Printf("Processing charge finished: %+v\n", res)
+		s.logger.Printf("Creating payment session finished: %+v\n", res)
 		return res, nil
 	}
 }
