@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"github.com/stripe/stripe-go/v72/client"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
@@ -14,12 +13,20 @@ import (
 
 // service contains the business logic to manage payments on different billing systems such as Adapter.
 type service struct {
-	logger    *log.Logger
-	credits   credits.CreditsV1
+	// logger is used to log relevant information when running this service.
+	logger *log.Logger
+
+	// credits contains a api.CreditsV1 implementation.
+	credits credits.CreditsV1
+
+	// customers contains a api.CustomersV1 implementation.
 	customers customers.CustomersV1
-	stripe    *client.API
-	timeout   time.Duration
-	adapter   adapter.Client
+
+	// timeout is used as the timeout duration for the circuit breaking mechanism when calling different methods.
+	timeout time.Duration
+
+	// adapter contains an implementation of a payment service client such as Stripe.
+	adapter adapter.Client
 }
 
 // Charge charges a certain amount of money to a given user.
