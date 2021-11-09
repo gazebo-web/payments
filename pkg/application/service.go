@@ -82,7 +82,7 @@ func (s *service) Charge(ctx context.Context, req api.ChargeRequest) (api.Charge
 // CreateSession creates a session for a user to pay for a certain product or service.
 // This token is intended to allow external interfaces to interact with the payment provider on behalf of the user.
 func (s *service) CreateSession(ctx context.Context, req api.CreateSessionRequest) (api.CreateSessionResponse, error) {
-	s.logger.Printf("Processing charge request: %+v\n", req)
+	s.logger.Printf("Creating payment session: %+v\n", req)
 
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
