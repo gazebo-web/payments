@@ -135,11 +135,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 	}
 }
 
-// ListInvoices returns a list of invoices of the given user.
-func (s *service) ListInvoices(ctx context.Context, req api.ListInvoicesRequest) (api.ListInvoicesResponse, error) {
-	panic("implement me")
-}
-
+// createCustomer groups the operations needed to create a customer in a certain payment system and in the customer service.
 func (s *service) createCustomer(ctx context.Context, req api.CreateSessionRequest) (customers.CustomerResponse, error) {
 	id, err := s.adapter.CreateCustomer(req.Application, req.Handle)
 	if err != nil {
@@ -156,6 +152,11 @@ func (s *service) createCustomer(ctx context.Context, req api.CreateSessionReque
 		return customers.CustomerResponse{}, err
 	}
 	return customerResponse, nil
+}
+
+// ListInvoices returns a list of invoices of the given user.
+func (s *service) ListInvoices(ctx context.Context, req api.ListInvoicesRequest) (api.ListInvoicesResponse, error) {
+	panic("implement me")
 }
 
 // Service holds methods to interact with different payments systems.
