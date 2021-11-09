@@ -11,6 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
+	"gitlab.com/ignitionrobotics/billing/payments/pkg/fake"
 	"testing"
 	"time"
 )
@@ -194,4 +195,82 @@ func (s *serviceTestSuite) TestCreateSessionOK() {
 
 	s.Assert().Equal(api.PaymentServiceStripe, res.Service)
 	s.Assert().NotEmpty(res.Session)
+}
+
+func (s *serviceTestSuite) TestCreateSessionFailsWhenCreatingCustomer() {
+	var f fake.Adapter
+
+	// Load new payment service with fake adapter
+	s.Service = NewPaymentsService(Options{
+		Credits:   s.Credits,
+		Customers: s.Customers,
+		Adapter:   &f,
+		Timeout:   200 * time.Millisecond,
+	})
+
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
+
+	// If stripe returns an error, the create session call should fail.
+	f.On("CreateCustomer", "test", "test").Return("", errors.New("stripe fake service failed"))
+
+	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "test",
+	})
+	s.Assert().Error(err)
+}
+
+func (s *serviceTestSuite) TestCreateSessionFailsWhenCreatingSession() {
+	var f fake.Adapter
+
+	// Load new payment service with fake adapter
+	s.Service = NewPaymentsService(Options{
+		Credits:   s.Credits,
+		Customers: s.Customers,
+		Adapter:   &f,
+		Timeout:   200 * time.Millisecond,
+	})
+
+	ctx := mock.AnythingOfType("*context.timerCtx")
+
+	cus := customers.CustomerResponse{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+		ID:          "cus_HdRJTeoStCxpP4E",
+	}
+
+	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+	}).Return(cus, error(nil))
+
+	req := api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "test",
+	}
+
+	// If stripe returns an error, the create session call should fail.
+	f.On("CreateSession", req, cus).Return(api.CreateSessionResponse{}, errors.New("stripe fake service failed"))
+
+	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "test",
+	})
+	s.Assert().Error(err)
 }
