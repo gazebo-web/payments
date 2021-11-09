@@ -3,14 +3,25 @@ package client
 import (
 	"context"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
+	"gitlab.com/ignitionrobotics/web/ign-go/encoders"
+	"gitlab.com/ignitionrobotics/web/ign-go/net"
+	"net/http"
+	"net/url"
+	"time"
 )
 
 // client contains the HTTP client to connect to the payments API.
-type client struct{}
+type client struct {
+	client net.Client
+}
 
 // CreateSession performs an HTTP request to create a payment session in the Payments API.
-func (c *client) CreateSession(ctx context.Context, req api.CreateSessionRequest) (api.CreateSessionResponse, error) {
-	panic("implement me")
+func (c *client) CreateSession(ctx context.Context, in api.CreateSessionRequest) (api.CreateSessionResponse, error) {
+	var out api.CreateSessionResponse
+	if err := c.client.Call(ctx, "CreateSession", &in, &out); err != nil {
+		return api.CreateSessionResponse{}, err
+	}
+	return out, nil
 }
 
 // ListInvoices performs an HTTP request to list all the available invoices of a certain user.
@@ -24,6 +35,14 @@ type Client interface {
 }
 
 // NewClient initializes a new api.PaymentsV1 client implementation using an HTTP client.
-func NewClient() Client {
-	return &client{}
+func NewClient(baseURL *url.URL, timeout time.Duration) Client {
+	endpoints := map[string]net.EndpointHTTP{
+		"CreateSession": {
+			Method: http.MethodPost,
+			Path:   "/payments/session",
+		},
+	}
+	return &client{
+		client: net.NewClient(net.NewCallerHTTP(baseURL, endpoints, timeout), encoders.JSON),
+	}
 }
