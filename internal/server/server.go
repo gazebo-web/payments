@@ -123,6 +123,10 @@ func NewServer(opts Options) *Server {
 	s.router = chi.NewRouter()
 	s.router.HandleFunc("/stripe/webhook", s.StripeWebhook)
 
+	s.router.Route("/payments", func(r chi.Router) {
+		r.Post("/session", s.CreateSession)
+	})
+
 	s.httpServer = http.Server{
 		Addr:    s.getAddress(),
 		Handler: s.router,

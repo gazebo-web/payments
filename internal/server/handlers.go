@@ -46,3 +46,8 @@ func (s *Server) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
+
+// CreateSession is an HTTP handler to call the api.PaymentsV1's CreateSession method.
+func (s *Server) CreateSession(w http.ResponseWriter, r *http.Request) {
+
+}
