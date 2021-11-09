@@ -25,7 +25,8 @@ type service struct {
 	// timeout is used as the timeout duration for the circuit breaking mechanism when calling different methods.
 	timeout time.Duration
 
-	// adapter contains an implementation of a payment service client such as Stripe.
+	// adapter contains an implementation of a payment service client.
+	// E.g. Stripe, Paypal, etc.
 	adapter adapter.Client
 }
 

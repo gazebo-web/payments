@@ -100,7 +100,7 @@ type CreateSessionRequest struct {
 	// E.g. application username, application organization name.
 	Handle string `json:"handle"`
 
-	// Application is the application that originated the creation of this session.
+	// Application is the application that requested the creation of this session.
 	Application string `json:"application"`
 }
 
