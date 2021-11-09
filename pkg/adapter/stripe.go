@@ -116,6 +116,7 @@ func (s *stripeAdapter) CreateSession(req api.CreateSessionRequest, cus customer
 		Params: stripe.Params{
 			Metadata: map[string]string{
 				"application": req.Application, // Used by webhooks
+				"handle":      req.Handle,
 			},
 		},
 	})
