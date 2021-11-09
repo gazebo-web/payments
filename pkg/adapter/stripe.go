@@ -101,8 +101,8 @@ func (s *stripeAdapter) CreateSession(req api.CreateSessionRequest, cus customer
 				Quantity: stripe.Int64(1),
 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
 					Enabled: stripe.Bool(true),
-					Maximum: stripe.Int64(1000), // Max amount of credits to buy
-					Minimum: stripe.Int64(1),    // Min amount of credits to buy
+					Maximum: stripe.Int64(999), // Max amount of credits to buy
+					Minimum: stripe.Int64(1),   // Min amount of credits to buy
 				},
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 					Currency: stripe.String("usd"),
