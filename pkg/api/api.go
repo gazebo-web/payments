@@ -2,6 +2,27 @@ package api
 
 import (
 	"context"
+	"errors"
+)
+
+var (
+	// ErrEmptyService is returned when the service provided is empty.
+	ErrEmptyService = errors.New("empty service")
+
+	// ErrInvalidService is returned when an invalid service is used.
+	ErrInvalidService = errors.New("invalid service")
+
+	// ErrEmptyCallbacks is returned when either (or both) of the callback URLs are empty.
+	ErrEmptyCallbacks = errors.New("empty callbacks")
+
+	// ErrInvalidURL is returned when an invalid URL callback value is passed on a request.
+	ErrInvalidURL = errors.New("invalid URL")
+
+	// ErrEmptyHandle is returned when an empty handle value is passed on a request.
+	ErrEmptyHandle = errors.New("empty handle")
+
+	// ErrEmptyApplication is returned when an empty application value is passed on a request.
+	ErrEmptyApplication = errors.New("empty application")
 )
 
 // PaymentService identifies different payment services such as Stripe, PayPal, and more.
@@ -12,8 +33,19 @@ const (
 	PaymentServiceStripe PaymentService = "stripe"
 )
 
+// Validate validates the current payment service.
+func (ps PaymentService) Validate() error {
+	if len(ps) == 0 {
+		return ErrEmptyService
+	}
+	if ps != PaymentServiceStripe {
+		return ErrInvalidService
+	}
+	return nil
+}
+
 // ChargerV1 contains methods that should be called after charging a certain amount of money to a user.
-// This interface is private to the payment service and should only be called from a webhook 
+// This interface is private to the payment service and should only be called from a webhook
 // after a payment system event is processed.
 type ChargerV1 interface {
 	// Charge charges a certain amount of money to a given user.
@@ -54,10 +86,60 @@ type PaymentsV1 interface {
 }
 
 // CreateSessionRequest is the input for the PaymentsV1.CreateSession method.
-type CreateSessionRequest struct{}
+type CreateSessionRequest struct {
+	// Service contains the name of the payment service that should be used to start a transaction session.
+	Service PaymentService `json:"service"`
+
+	// SuccessURL is the URL where to redirect a checkout process when it succeeds.
+	SuccessURL string `json:"success_url"`
+
+	// CancelURL is the URL where to redirect a checkout process when it fails.
+	CancelURL string `json:"cancel_url"`
+
+	// Handle is the customer identity in the context of a certain application.
+	// E.g. application username, application organization name.
+	Handle string `json:"handle"`
+
+	// Application is the application that requested the creation of this session.
+	Application string `json:"application"`
+}
+
+// Validate validates the current request.
+func (r CreateSessionRequest) Validate() error {
+	if err := r.Service.Validate(); err != nil {
+		return err
+	}
+	if len(r.SuccessURL) == 0 || len(r.CancelURL) == 0 {
+		return ErrEmptyCallbacks
+	}
+
+	if err := validateURL(r.SuccessURL); err != nil {
+		return err
+	}
+
+	if err := validateURL(r.CancelURL); err != nil {
+		return err
+	}
+
+	if len(r.Handle) == 0 {
+		return ErrEmptyHandle
+	}
+
+	if len(r.Application) == 0 {
+		return ErrEmptyApplication
+	}
+
+	return nil
+}
 
 // CreateSessionResponse is the output of the PaymentsV1.CreateSession method.
-type CreateSessionResponse struct{}
+type CreateSessionResponse struct {
+	// Service contains the name of the service where the transaction is taking place.
+	Service PaymentService `json:"service"`
+
+	// Session is the ID of the session created for this transaction.
+	Session string `json:"session"`
+}
 
 // ListInvoicesRequest is the input for the PaymentsV1.ListInvoices method.
 type ListInvoicesRequest struct{}

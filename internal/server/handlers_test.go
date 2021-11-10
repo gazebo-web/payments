@@ -15,6 +15,7 @@ import (
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
+	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
 	"log"
@@ -33,27 +34,45 @@ type stripeWebhookSuite struct {
 	Payments  application.Service
 	Logger    *log.Logger
 	handler   http.Handler
+	Adapter   adapter.Client
+	Config    conf.Config
 }
 
 func TestStripeWebhookSuite(t *testing.T) {
 	suite.Run(t, new(stripeWebhookSuite))
 }
 
-func (s *stripeWebhookSuite) SetupTest() {
+func (s *stripeWebhookSuite) SetupSuite() {
 	s.Logger = log.New(os.Stdout, "[TestStripeWebhook] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
+	s.Require().NoError(s.Config.Parse())
+}
 
+func (s *stripeWebhookSuite) SetupTest() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
-	s.Payments = application.NewPaymentsService(s.Credits, s.Customers, s.Logger, 200*time.Millisecond)
+	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
+	s.Payments = application.NewPaymentsService(application.Options{
+		Credits:   s.Credits,
+		Customers: s.Customers,
+		Adapter:   s.Adapter,
+		Logger:    s.Logger,
+		Timeout:   200 * time.Millisecond,
+	})
+
+	var cfg conf.Config
+	s.Require().NoError(cfg.Parse())
+
 	s.Server = NewServer(Options{
-		config: conf.Config{
-			Port:             80,
-			StripeSigningKey: "whsec_test1234",
-		},
+		config:   cfg,
 		payments: s.Payments,
 		logger:   s.Logger,
+		adapter:  s.Adapter,
 	})
 	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+}
+
+func (s *stripeWebhookSuite) TearDownSuite() {
+	unsetEnvVars(s.Suite)
 }
 
 func (s *stripeWebhookSuite) TestWebhookEventReceived() {
@@ -64,7 +83,7 @@ func (s *stripeWebhookSuite) TestWebhookEventReceived() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -76,7 +95,7 @@ func (s *stripeWebhookSuite) TestWebhookEventReceived() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{
+	}).Return(customers.CustomerResponse{
 		Handle:      user,
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
@@ -105,7 +124,7 @@ func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -116,7 +135,7 @@ func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{}, errors.New("customer service failed"))
+	}).Return(customers.CustomerResponse{}, errors.New("customer service failed"))
 
 	s.handler.ServeHTTP(rr, req)
 
@@ -131,7 +150,7 @@ func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -143,7 +162,7 @@ func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{
+	}).Return(customers.CustomerResponse{
 		Handle:      user,
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
@@ -172,7 +191,7 @@ func (s *stripeWebhookSuite) TestWebhookTimeout() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
@@ -184,7 +203,7 @@ func (s *stripeWebhookSuite) TestWebhookTimeout() {
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.GetCustomerResponse{
+	}).Return(customers.CustomerResponse{
 		Handle:      user,
 		ID:          "cus_CDQTvYK1POcCHA",
 		Service:     string(api.PaymentServiceStripe),
@@ -215,14 +234,14 @@ func (s *stripeWebhookSuite) TestWebhookEventFailed() {
 	req, err := http.NewRequest(http.MethodPost, "/", buff)
 	s.Require().NoError(err)
 
-	sig := webhook.ComputeSignature(now, body, "whsec_test1234")
+	sig := webhook.ComputeSignature(now, body, s.Config.Stripe.SigningKey)
 	req.Header.Set("Stripe-Signature", fmt.Sprintf("t=%d,v1=%s", now.Unix(), hex.EncodeToString(sig)))
 
 	rr := httptest.NewRecorder()
 
 	s.handler.ServeHTTP(rr, req)
 
-	s.Assert().Equal(http.StatusBadRequest, rr.Code)
+	s.Assert().Equal(http.StatusInternalServerError, rr.Code)
 }
 
 func (s *stripeWebhookSuite) prepareEvent(eventType string, status stripe.PaymentIntentStatus) ([]byte, time.Time) {
