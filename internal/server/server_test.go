@@ -11,7 +11,6 @@ import (
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
 	"log"
-	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -207,9 +206,7 @@ func (s *runTestSuite) SetupSuite() {
 	s.Config, err = Setup(s.Logger)
 	s.Require().NoError(err)
 
-	u, err := url.Parse(s.Config.CreditsURL)
-	s.Require().NoError(err)
-	s.Credits = credits.NewCreditsClientV1(u, s.Config.Timeout)
+	s.Credits = credits.NewCreditsClientV1(s.Config.CreditsURL, s.Config.Timeout)
 
 	s.Customers = customers.NewClient()
 	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)

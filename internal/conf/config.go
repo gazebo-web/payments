@@ -2,6 +2,7 @@ package conf
 
 import (
 	"github.com/caarlos0/env/v6"
+	"net/url"
 	"time"
 )
 
@@ -35,7 +36,7 @@ type Config struct {
 	Timeout time.Duration `env:"PAYMENTS_CIRCUIT_BREAKER_TIMEOUT" envDefault:"30s"`
 
 	// CreditsURL contains the URL to the credits service.
-	CreditsURL string `env:"PAYMENTS_CREDITS_SERVICE_URL,required"`
+	CreditsURL *url.URL `env:"PAYMENTS_CREDITS_SERVICE_URL,required"`
 }
 
 // Parse fills Config data from an external source.
