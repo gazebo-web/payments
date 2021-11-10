@@ -11,6 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 // Setup initializes the conf.Config to run the web server.
@@ -26,8 +27,12 @@ func Setup(logger *log.Logger) (conf.Config, error) {
 
 // Run runs the web server using the given config.
 func Run(config conf.Config, logger *log.Logger) error {
-	logger.Println("Initializing Credits HTTP client")
-	creditsClient := credits.NewClient()
+	logger.Println("Initializing Credits HTTP client:", config.CreditsURL)
+	u, err := url.Parse(config.CreditsURL)
+	if err != nil {
+		return err
+	}
+	creditsClient := credits.NewCreditsClientV1(u, config.Timeout)
 
 	logger.Println("Initializing Customers HTTP client")
 	customersClient := customers.NewClient()

@@ -109,7 +109,7 @@ func (s *stripeAdapter) CreateSession(req api.CreateSessionRequest, cus customer
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
 						Name: stripe.String("Credits"),
 					},
-					UnitAmount: stripe.Int64(100), // Price per credit
+					UnitAmount: stripe.Int64(int64(req.UnitPrice)), // Price per credit
 				},
 			},
 		},

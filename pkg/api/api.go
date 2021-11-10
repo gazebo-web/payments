@@ -23,6 +23,9 @@ var (
 
 	// ErrEmptyApplication is returned when an empty application value is passed on a request.
 	ErrEmptyApplication = errors.New("empty application")
+
+	// ErrInvalidUnitPrice is returned when an invalid unit price is passed on a request.
+	ErrInvalidUnitPrice = errors.New("invalid unit price")
 )
 
 // PaymentService identifies different payment services such as Stripe, PayPal, and more.
@@ -102,6 +105,9 @@ type CreateSessionRequest struct {
 
 	// Application is the application that requested the creation of this session.
 	Application string `json:"application"`
+
+	// UnitPrice is the amount of cents a credit costs.
+	UnitPrice uint `json:"-"`
 }
 
 // Validate validates the current request.
@@ -127,6 +133,10 @@ func (r CreateSessionRequest) Validate() error {
 
 	if len(r.Application) == 0 {
 		return ErrEmptyApplication
+	}
+
+	if r.UnitPrice == 0 {
+		return ErrInvalidUnitPrice
 	}
 
 	return nil
