@@ -132,6 +132,8 @@ gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783 h
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783/go.mod h1:2Vj2X9dvr+qrwzyjyijGOKegX9c5n9IzU5ASFr81vds=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e h1:SaVmiatOQJ3m5VOM1MJFX/jb3YsNlfsB6xQGhRHQ558=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e/go.mod h1:+7P6LIiQYLJgMLRguRh20yis6hUGLdjjYQ8PBYylWd0=
+gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782 h1:G98Xl81W+cK+8oqyBXOELPa21whWp0U6141WBXpiSnY=
+gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782/go.mod h1:/mtnUFtluiIhUAWSLVcUJnO48Xkq3CyOU+Si/iMETWk=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c h1:0HzzogDXr3N/pBjRrVbtti6pfgzjbYlhBcRWHDUWpDE=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c/go.mod h1:IiLZKx/AKubhvop0TM+zTSLYocZk9TtrchU+qnTl5ms=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.0/go.mod h1:wSLPCGnC6TPQh7sFuonkhTUv4KnLdNOcy4ps77qffEQ=
