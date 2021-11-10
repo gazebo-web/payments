@@ -38,6 +38,7 @@ func (s *setupTestSuite) TestSucceed() {
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_CIRCUIT_BREAKER_TIMEOUT", "10s"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
 
 	cfg, err := Setup(s.Logger)
 
@@ -51,6 +52,7 @@ func (s *setupTestSuite) TestSucceed() {
 func (s *setupTestSuite) TestDefaultValues() {
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
 
 	cfg, err := Setup(s.Logger)
 	s.Assert().NoError(err)
@@ -90,6 +92,7 @@ func (s *serverTestSuite) SetupSuite() {
 	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
 
 	s.Logger = log.New(os.Stdout, "[TestServer] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 	s.Config, err = Setup(s.Logger)
@@ -197,11 +200,14 @@ func (s *runTestSuite) SetupSuite() {
 	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
 
 	s.Logger = log.New(os.Stdout, "[TestRun] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 	s.Config, err = Setup(s.Logger)
 	s.Require().NoError(err)
-	s.Credits = credits.NewClient()
+
+	s.Credits = credits.NewCreditsClientV1(s.Config.CreditsURL, s.Config.Timeout)
+
 	s.Customers = customers.NewClient()
 	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
 
@@ -259,4 +265,5 @@ func unsetEnvVars(s suite.Suite) {
 	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_SECRET_KEY"))
 	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_URL"))
 	s.Require().NoError(os.Unsetenv("PAYMENTS_CIRCUIT_BREAKER_TIMEOUT"))
+	s.Require().NoError(os.Unsetenv("PAYMENTS_CREDITS_SERVICE_URL"))
 }
