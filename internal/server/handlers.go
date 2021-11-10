@@ -1,11 +1,7 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/webhook"
-	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"io"
 	"net/http"
 )
@@ -26,56 +22,19 @@ func (s *Server) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	s.logger.Println("Reading request body")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		s.logger.Println("Failed to read body:", err)
 		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusInternalServerError), "Failed to read body"), http.StatusInternalServerError)
 		return
 	}
 
-	s.logger.Println("Parsing incoming Stripe webhook event")
-	event, err := webhook.ConstructEvent(body, r.Header.Get("Stripe-Signature"), s.webhookStripeSigningKey)
+	req, err := s.adapter.GenerateChargeRequest(body, r.Header)
 	if err != nil {
-		s.logger.Println("Signed event is invalid:", err)
-		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusForbidden), "Invalid event"), http.StatusForbidden)
+		s.logger.Println("Failed to generate charge request:", err)
+		http.Error(w, fmt.Sprintf("%s - %s: %v", http.StatusText(http.StatusInternalServerError), "Failed to generate charge request", err), http.StatusInternalServerError)
 		return
 	}
 
-	s.logger.Println("Checking payment status")
-	if event.Type != EventPaymentIntentSucceeded {
-		s.logger.Println("The payment did not succeed:", event.Type)
-		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusBadRequest), "Couldn't process event type"), http.StatusBadRequest)
-		return
-	}
-
-	s.logger.Println("Unmarshalling payment intent")
-	var paymentIntent stripe.PaymentIntent
-	if err = json.Unmarshal(event.Data.Raw, &paymentIntent); err != nil {
-		s.logger.Println("Failed to unmarshal payment intent:", err)
-		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusBadRequest), "Couldn't process event data"), http.StatusBadRequest)
-		return
-	}
-
-	s.logger.Println("Checking customer is defined")
-	if paymentIntent.Customer == nil {
-		s.logger.Println("Failed to get customer")
-		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusBadRequest), "Missing customer"), http.StatusBadRequest)
-		return
-	}
-
-	s.logger.Println("Getting application id from metadata")
-	var app string
-	var ok bool
-	if app, ok = paymentIntent.Metadata["application"]; !ok {
-		s.logger.Println("Failed to get application ID")
-		http.Error(w, fmt.Sprintf("%s - %s", http.StatusText(http.StatusBadRequest), "Missing application"), http.StatusBadRequest)
-		return
-	}
-
-	_, err = s.payments.Charge(r.Context(), api.ChargeRequest{
-		Amount:      uint(paymentIntent.Amount),
-		Currency:    paymentIntent.Currency,
-		Customer:    paymentIntent.Customer.ID,
-		Service:     api.PaymentServiceStripe,
-		Application: app,
-	})
+	_, err = s.payments.Charge(r.Context(), req)
 	if err != nil {
 		s.logger.Println("Failed to process charge:", err)
 		http.Error(w, fmt.Sprintf("%s - %s: %v", http.StatusText(http.StatusInternalServerError), "Failed to charge customer", err), http.StatusInternalServerError)

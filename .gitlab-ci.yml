@@ -16,3 +16,19 @@ code_quality:
     REPORT_FORMAT: html
   artifacts:
     paths: [gl-code-quality-report.html]
+
+test:
+  services:
+    - name: stripemock/stripe-mock:latest
+      alias: stripe
+
+
+coverage:
+  services:
+    - name: stripemock/stripe-mock:latest
+      alias: stripe
+
+race:
+  services:
+    - name: stripemock/stripe-mock:latest
+      alias: stripe
