@@ -31,7 +31,7 @@ func Run(config conf.Config, logger *log.Logger) error {
 	creditsClient := credits.NewCreditsClientV1(config.CreditsURL, config.Timeout)
 
 	logger.Println("Initializing Customers HTTP client")
-	customersClient := customers.NewClient()
+	customersClient := customers.NewCustomersClientV1(config.CustomersURL, config.Timeout)
 
 	logger.Println("Initializing Stripe adapter")
 	stripeAdapter := adapter.NewStripeAdapter(config.Stripe)

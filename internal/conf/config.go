@@ -37,6 +37,9 @@ type Config struct {
 
 	// CreditsURL contains the URL to the credits service.
 	CreditsURL *url.URL `env:"PAYMENTS_CREDITS_SERVICE_URL,required"`
+
+	// CustomerURL contains the URL to the customers service.
+	CustomersURL *url.URL `env:"PAYMENTS_CUSTOMERS_SERVICE_URL,required"`
 }
 
 // Parse fills Config data from an external source.
