@@ -4,12 +4,12 @@ go 1.17
 
 require (
 	github.com/caarlos0/env/v6 v6.7.2
-	github.com/go-chi/chi/v5 v5.0.4
+	github.com/go-chi/chi/v5 v5.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go/v72 v72.72.0
-	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211102165740-6893dbf77977
-	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e
-	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109161503-fd23d0c519d2
+	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783
+	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782
+	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c
 )
 
 require (

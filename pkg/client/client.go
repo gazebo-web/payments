@@ -34,8 +34,8 @@ type Client interface {
 	api.PaymentsV1
 }
 
-// NewClient initializes a new api.PaymentsV1 client implementation using an HTTP client.
-func NewClient(baseURL *url.URL, timeout time.Duration) Client {
+// NewPaymentsClientV1 initializes a new api.PaymentsV1 client implementation using an HTTP client.
+func NewPaymentsClientV1(baseURL *url.URL, timeout time.Duration) Client {
 	endpoints := map[string]net.EndpointHTTP{
 		"CreateSession": {
 			Method: http.MethodPost,

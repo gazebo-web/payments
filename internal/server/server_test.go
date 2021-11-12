@@ -38,6 +38,8 @@ func (s *setupTestSuite) TestSucceed() {
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_CIRCUIT_BREAKER_TIMEOUT", "10s"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CUSTOMERS_SERVICE_URL", "http://localhost:8083"))
 
 	cfg, err := Setup(s.Logger)
 
@@ -46,11 +48,15 @@ func (s *setupTestSuite) TestSucceed() {
 	s.Assert().Equal("test1234", cfg.Stripe.SigningKey)
 	s.Assert().Equal("secret1234", cfg.Stripe.SecretKey)
 	s.Assert().Equal(10*time.Second, cfg.Timeout)
+	s.Assert().Equal("http://localhost:8082", cfg.CreditsURL.String())
+	s.Assert().Equal("http://localhost:8083", cfg.CustomersURL.String())
 }
 
 func (s *setupTestSuite) TestDefaultValues() {
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CUSTOMERS_SERVICE_URL", "http://localhost:8083"))
 
 	cfg, err := Setup(s.Logger)
 	s.Assert().NoError(err)
@@ -90,6 +96,8 @@ func (s *serverTestSuite) SetupSuite() {
 	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CUSTOMERS_SERVICE_URL", "http://localhost:8083"))
 
 	s.Logger = log.New(os.Stdout, "[TestServer] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 	s.Config, err = Setup(s.Logger)
@@ -197,12 +205,16 @@ func (s *runTestSuite) SetupSuite() {
 	s.Require().NoError(os.Setenv("PAYMENTS_HTTP_SERVER_PORT", "8001"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SIGNING_KEY", "test1234"))
 	s.Require().NoError(os.Setenv("PAYMENTS_STRIPE_SECRET_KEY", "secret1234"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CREDITS_SERVICE_URL", "http://localhost:8082"))
+	s.Require().NoError(os.Setenv("PAYMENTS_CUSTOMERS_SERVICE_URL", "http://localhost:8083"))
 
 	s.Logger = log.New(os.Stdout, "[TestRun] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 	s.Config, err = Setup(s.Logger)
 	s.Require().NoError(err)
-	s.Credits = credits.NewClient()
-	s.Customers = customers.NewClient()
+
+	s.Credits = credits.NewCreditsClientV1(s.Config.CreditsURL, s.Config.Timeout)
+
+	s.Customers = customers.NewCustomersClientV1(s.Config.CustomersURL, s.Config.Timeout)
 	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
 
 	s.Payments = application.NewPaymentsService(application.Options{
@@ -259,4 +271,6 @@ func unsetEnvVars(s suite.Suite) {
 	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_SECRET_KEY"))
 	s.Require().NoError(os.Unsetenv("PAYMENTS_STRIPE_URL"))
 	s.Require().NoError(os.Unsetenv("PAYMENTS_CIRCUIT_BREAKER_TIMEOUT"))
+	s.Require().NoError(os.Unsetenv("PAYMENTS_CREDITS_SERVICE_URL"))
+	s.Require().NoError(os.Unsetenv("PAYMENTS_CUSTOMERS_SERVICE_URL"))
 }

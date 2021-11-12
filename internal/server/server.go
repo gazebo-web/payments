@@ -26,11 +26,15 @@ func Setup(logger *log.Logger) (conf.Config, error) {
 
 // Run runs the web server using the given config.
 func Run(config conf.Config, logger *log.Logger) error {
-	logger.Println("Initializing Credits HTTP client")
-	creditsClient := credits.NewClient()
+	logger.Println("Initializing Credits HTTP client:", config.CreditsURL)
+
+	creditsClient := credits.NewCreditsClientV1(config.CreditsURL, config.Timeout)
 
 	logger.Println("Initializing Customers HTTP client")
-	customersClient := customers.NewClient()
+	customersClient := customers.NewCustomersClientV1(config.CustomersURL, config.Timeout)
+
+	logger.Println("Initializing Stripe adapter")
+	stripeAdapter := adapter.NewStripeAdapter(config.Stripe)
 
 	logger.Println("Initializing Stripe adapter")
 	stripeAdapter := adapter.NewStripeAdapter(config.Stripe)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
 	fakecredits "gitlab.com/ignitionrobotics/billing/credits/pkg/fake"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	fakecustomers "gitlab.com/ignitionrobotics/billing/customers/pkg/fake"
@@ -45,6 +46,12 @@ func (s *serviceTestSuite) SetupTest() {
 }
 
 func (s *serviceTestSuite) TestCreateSessionServiceIsEmpty() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service: "",
 	})
@@ -53,6 +60,12 @@ func (s *serviceTestSuite) TestCreateSessionServiceIsEmpty() {
 }
 
 func (s *serviceTestSuite) TestCreateSessionServiceIsNotValid() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service: "paypal",
 	})
@@ -61,6 +74,12 @@ func (s *serviceTestSuite) TestCreateSessionServiceIsNotValid() {
 }
 
 func (s *serviceTestSuite) TestCreateSessionEmptyURLs() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:    api.PaymentServiceStripe,
 		SuccessURL: "https://localhost/success",
@@ -87,6 +106,12 @@ func (s *serviceTestSuite) TestCreateSessionEmptyURLs() {
 }
 
 func (s *serviceTestSuite) TestCreateSessionURLsMalformed() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:    api.PaymentServiceStripe,
 		SuccessURL: "https://localhost",
@@ -103,6 +128,12 @@ func (s *serviceTestSuite) TestCreateSessionURLsMalformed() {
 }
 
 func (s *serviceTestSuite) TestCreateSessionEmptyHandle() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:    api.PaymentServiceStripe,
 		SuccessURL: "https://localhost",
@@ -114,6 +145,12 @@ func (s *serviceTestSuite) TestCreateSessionEmptyHandle() {
 }
 
 func (s *serviceTestSuite) TestCreateSessionEmptyApplication() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:     api.PaymentServiceStripe,
 		SuccessURL:  "https://localhost",
@@ -125,6 +162,26 @@ func (s *serviceTestSuite) TestCreateSessionEmptyApplication() {
 	s.Assert().Equal(err, api.ErrEmptyApplication)
 }
 
+func (s *serviceTestSuite) TestCreateSessionInvalidUnitPrice() {
+	ctx := mock.AnythingOfType("*context.timerCtx")
+
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   0,
+		Currency: "usd",
+	}, error(nil))
+
+	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
+		Service:     api.PaymentServiceStripe,
+		SuccessURL:  "https://localhost",
+		CancelURL:   "https://localhost",
+		Handle:      "test",
+		Application: "test",
+	})
+
+	s.Assert().Error(err)
+	s.Assert().Equal(err, api.ErrInvalidUnitPrice)
+}
+
 func (s *serviceTestSuite) TestCreateSessionCustomerFailed() {
 	ctx := mock.AnythingOfType("*context.timerCtx")
 	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
@@ -132,6 +189,11 @@ func (s *serviceTestSuite) TestCreateSessionCustomerFailed() {
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
 	}).Return(customers.CustomerResponse{}, errors.New("customer service failed"))
+
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
 
 	_, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:     api.PaymentServiceStripe,
@@ -150,6 +212,11 @@ func (s *serviceTestSuite) TestCreateSessionOKWithCustomerCreation() {
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
 	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
+
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
 
 	s.Customers.On("CreateCustomer", ctx, mock.AnythingOfType("api.CreateCustomerRequest")).Return(customers.CustomerResponse{
 		Handle:      "test",
@@ -184,6 +251,11 @@ func (s *serviceTestSuite) TestCreateSessionOK() {
 		ID:          "cus_HdRJTeoStCxpP4E",
 	}, error(nil))
 
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
 	res, err := s.Service.CreateSession(context.Background(), api.CreateSessionRequest{
 		Service:     api.PaymentServiceStripe,
 		SuccessURL:  "https://localhost",
@@ -214,6 +286,11 @@ func (s *serviceTestSuite) TestCreateSessionFailsWhenCreatingCustomer() {
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
 	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
+
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
 
 	// If stripe returns an error, the create session call should fail.
 	f.On("CreateCustomer", "test", "test").Return("", errors.New("stripe fake service failed"))
@@ -260,7 +337,13 @@ func (s *serviceTestSuite) TestCreateSessionFailsWhenCreatingSession() {
 		CancelURL:   "https://localhost",
 		Handle:      "test",
 		Application: "test",
+		UnitPrice:   2,
 	}
+
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
 
 	// If stripe returns an error, the create session call should fail.
 	f.On("CreateSession", req, cus).Return(api.CreateSessionResponse{}, errors.New("stripe fake service failed"))

@@ -25,7 +25,8 @@ type service struct {
 	// timeout is used as the timeout duration for the circuit breaking mechanism when calling different methods.
 	timeout time.Duration
 
-	// adapter contains an implementation of a payment service client such as Stripe.
+	// adapter contains an implementation of a payment service client.
+	// E.g. Stripe, Paypal, etc.
 	adapter adapter.Client
 }
 
@@ -91,7 +92,15 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 	ch := make(chan api.CreateSessionResponse, 1)
 	errs := make(chan error, 1)
 	go func() {
-		if err := req.Validate(); err != nil {
+		// TODO: Support multiple currencies
+		unitPrice, err := s.credits.GetUnitPrice(ctx, credits.GetUnitPriceRequest{Currency: "usd"})
+		if err != nil {
+			errs <- err
+		}
+
+		req.UnitPrice = unitPrice.Amount
+
+		if err = req.Validate(); err != nil {
 			errs <- err
 			return
 		}
