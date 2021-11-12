@@ -113,6 +113,7 @@ func (s *stripeAdapter) CreateSession(req api.CreateSessionRequest, cus customer
 				},
 			},
 		},
+		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 		Params: stripe.Params{
 			Metadata: map[string]string{
 				"application": req.Application, // Used by webhooks
