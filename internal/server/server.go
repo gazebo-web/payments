@@ -36,9 +36,6 @@ func Run(config conf.Config, logger *log.Logger) error {
 	logger.Println("Initializing Stripe adapter")
 	stripeAdapter := adapter.NewStripeAdapter(config.Stripe)
 
-	logger.Println("Initializing Stripe adapter")
-	stripeAdapter := adapter.NewStripeAdapter(config.Stripe)
-
 	logger.Println("Initializing Payments service")
 	ps := application.NewPaymentsService(application.Options{
 		Credits:   creditsClient,
@@ -125,9 +122,9 @@ func NewServer(opts Options) *Server {
 	}
 
 	s.router = chi.NewRouter()
-	s.router.HandleFunc("/stripe/webhook", s.StripeWebhook)
 
 	s.router.Route("/payments", func(r chi.Router) {
+		r.Post("/webhooks/stripe", s.StripeWebhook)
 		r.Post("/session", s.CreateSession)
 	})
 

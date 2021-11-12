@@ -18,6 +18,7 @@ import (
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/application"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -26,7 +27,7 @@ import (
 	"time"
 )
 
-type stripeWebhookSuite struct {
+type handlersTestSuite struct {
 	suite.Suite
 	Server    *Server
 	Credits   *fakecredits.Fake
@@ -39,15 +40,15 @@ type stripeWebhookSuite struct {
 }
 
 func TestStripeWebhookSuite(t *testing.T) {
-	suite.Run(t, new(stripeWebhookSuite))
+	suite.Run(t, new(handlersTestSuite))
 }
 
-func (s *stripeWebhookSuite) SetupSuite() {
+func (s *handlersTestSuite) SetupSuite() {
 	s.Logger = log.New(os.Stdout, "[TestStripeWebhook] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 	s.Require().NoError(s.Config.Parse())
 }
 
-func (s *stripeWebhookSuite) SetupTest() {
+func (s *handlersTestSuite) SetupTest() {
 	s.Credits = fakecredits.NewClient()
 	s.Customers = fakecustomers.NewClient()
 	s.Adapter = adapter.NewStripeAdapter(s.Config.Stripe)
@@ -68,14 +69,16 @@ func (s *stripeWebhookSuite) SetupTest() {
 		logger:   s.Logger,
 		adapter:  s.Adapter,
 	})
-	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+
 }
 
-func (s *stripeWebhookSuite) TearDownSuite() {
+func (s *handlersTestSuite) TearDownSuite() {
 	unsetEnvVars(s.Suite)
 }
 
-func (s *stripeWebhookSuite) TestWebhookEventReceived() {
+func (s *handlersTestSuite) TestWebhookEventReceived() {
+	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+
 	body, now := s.prepareEvent(EventPaymentIntentSucceeded, stripe.PaymentIntentStatusSucceeded)
 
 	buff := bytes.NewBuffer(body)
@@ -116,7 +119,9 @@ func (s *stripeWebhookSuite) TestWebhookEventReceived() {
 	s.Assert().Equal(http.StatusOK, rr.Code)
 }
 
-func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
+func (s *handlersTestSuite) TestWebhookGetIdentityFails() {
+	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+
 	body, now := s.prepareEvent(EventPaymentIntentSucceeded, stripe.PaymentIntentStatusSucceeded)
 
 	buff := bytes.NewBuffer(body)
@@ -142,7 +147,9 @@ func (s *stripeWebhookSuite) TestWebhookGetIdentityFails() {
 	s.Assert().Equal(http.StatusInternalServerError, rr.Code)
 }
 
-func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
+func (s *handlersTestSuite) TestWebhookIncreaseCreditsFails() {
+	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+
 	body, now := s.prepareEvent(EventPaymentIntentSucceeded, stripe.PaymentIntentStatusSucceeded)
 
 	buff := bytes.NewBuffer(body)
@@ -183,7 +190,9 @@ func (s *stripeWebhookSuite) TestWebhookIncreaseCreditsFails() {
 	s.Assert().Equal(http.StatusInternalServerError, rr.Code)
 }
 
-func (s *stripeWebhookSuite) TestWebhookTimeout() {
+func (s *handlersTestSuite) TestWebhookTimeout() {
+	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+
 	body, now := s.prepareEvent(EventPaymentIntentSucceeded, stripe.PaymentIntentStatusSucceeded)
 
 	buff := bytes.NewBuffer(body)
@@ -226,7 +235,9 @@ func (s *stripeWebhookSuite) TestWebhookTimeout() {
 	s.Assert().Equal(http.StatusInternalServerError, rr.Code)
 }
 
-func (s *stripeWebhookSuite) TestWebhookEventFailed() {
+func (s *handlersTestSuite) TestWebhookEventFailed() {
+	s.handler = http.HandlerFunc(s.Server.StripeWebhook)
+
 	body, now := s.prepareEvent(EventPaymentIntentFailed, stripe.PaymentIntentStatusCanceled)
 
 	buff := bytes.NewBuffer(body)
@@ -244,7 +255,54 @@ func (s *stripeWebhookSuite) TestWebhookEventFailed() {
 	s.Assert().Equal(http.StatusInternalServerError, rr.Code)
 }
 
-func (s *stripeWebhookSuite) prepareEvent(eventType string, status stripe.PaymentIntentStatus) ([]byte, time.Time) {
+func (s *handlersTestSuite) TestCreateSessionOK() {
+	s.handler = http.HandlerFunc(s.Server.CreateSession)
+
+	body, err := json.Marshal(api.CreateSessionRequest{
+		Service:     "stripe",
+		SuccessURL:  "http://localhost",
+		CancelURL:   "http://localhost",
+		Handle:      "test",
+		Application: "test",
+	})
+
+	buff := bytes.NewBuffer(body)
+	req, err := http.NewRequest(http.MethodPost, "/", buff)
+	s.Require().NoError(err)
+
+	rr := httptest.NewRecorder()
+
+	ctx := mock.AnythingOfType("*context.timerCtx")
+	s.Customers.On("GetCustomerByHandle", ctx, customers.GetCustomerByHandleRequest{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+	}).Return(customers.CustomerResponse{
+		Handle:      "test",
+		Service:     string(api.PaymentServiceStripe),
+		Application: "test",
+		ID:          "cus_HdRJTeoStCxpP4E",
+	}, error(nil))
+
+	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
+		Amount:   2,
+		Currency: "usd",
+	}, error(nil))
+
+	s.handler.ServeHTTP(rr, req)
+
+	body, err = io.ReadAll(rr.Body)
+	s.Require().NoError(err)
+
+	var out api.CreateSessionResponse
+	s.Require().NoError(json.Unmarshal(body, &out))
+
+	s.Assert().Equal(http.StatusOK, rr.Code)
+	s.Assert().NotEmpty(out.Session)
+	s.Assert().Equal(api.PaymentServiceStripe, out.Service)
+}
+
+func (s *handlersTestSuite) prepareEvent(eventType string, status stripe.PaymentIntentStatus) ([]byte, time.Time) {
 	now := time.Now()
 
 	data, err := json.Marshal(stripe.PaymentIntent{
