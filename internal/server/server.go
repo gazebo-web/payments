@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/client"
 	"gitlab.com/ignitionrobotics/billing/payments/internal/conf"
@@ -122,6 +124,13 @@ func NewServer(opts Options) *Server {
 	}
 
 	s.router = chi.NewRouter()
+
+	s.router.Use(middleware.RequestID)
+	s.router.Use(middleware.RealIP)
+	s.router.Use(middleware.Logger)
+	s.router.Use(middleware.Recoverer)
+	s.router.Use(middleware.AllowContentType("application/json"))
+	s.router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	s.router.Route("/payments", func(r chi.Router) {
 		r.Post("/webhooks/stripe", s.StripeWebhook)

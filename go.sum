@@ -27,6 +27,8 @@ github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
 github.com/go-chi/chi/v5 v5.0.5 h1:l3RJ8T8TAqLsXFfah+RA6N4pydMbPwSdvNM+AFWvLUM=
 github.com/go-chi/chi/v5 v5.0.5/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
+github.com/go-chi/render v1.0.1 h1:4/5tis2cKaNdnv9zFLfXzcquC9HbeZgCnxGnKrltBS8=
+github.com/go-chi/render v1.0.1/go.mod h1:pq4Rr7HbnsdaeHagklXub+p6Wd16Af5l9koip1OvJns=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-kit/kit v0.9.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
@@ -130,8 +132,6 @@ github.com/stripe/stripe-go/v72 v72.72.0/go.mod h1:QwqJQtduHubZht9mek5sds9CtQcKF
 github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783 h1:Fd2rAOydSXY/hjqYQWzdfohs5s5jfQbiR02ylTc7pL4=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783/go.mod h1:2Vj2X9dvr+qrwzyjyijGOKegX9c5n9IzU5ASFr81vds=
-gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e h1:SaVmiatOQJ3m5VOM1MJFX/jb3YsNlfsB6xQGhRHQ558=
-gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211104181543-7a960896189e/go.mod h1:+7P6LIiQYLJgMLRguRh20yis6hUGLdjjYQ8PBYylWd0=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782 h1:G98Xl81W+cK+8oqyBXOELPa21whWp0U6141WBXpiSnY=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782/go.mod h1:/mtnUFtluiIhUAWSLVcUJnO48Xkq3CyOU+Si/iMETWk=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c h1:0HzzogDXr3N/pBjRrVbtti6pfgzjbYlhBcRWHDUWpDE=

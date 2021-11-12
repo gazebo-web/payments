@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/caarlos0/env/v6 v6.7.2
 	github.com/go-chi/chi/v5 v5.0.5
+	github.com/go-chi/render v1.0.1
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go/v72 v72.72.0
 	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783
