@@ -96,6 +96,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 		unitPrice, err := s.credits.GetUnitPrice(ctx, credits.GetUnitPriceRequest{Currency: "usd"})
 		if err != nil {
 			errs <- err
+			return
 		}
 
 		req.UnitPrice = unitPrice.Amount
@@ -116,6 +117,8 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 		}
 
 		if err != nil && err.Error() == customers.ErrCustomerNotFound.Error() {
+			var err error
+			s.logger.Println("Customer not found, creating new one:", req.Handle)
 			if customerResponse, err = s.createCustomer(ctx, req); err != nil {
 				errs <- err
 				return
@@ -136,7 +139,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 		s.logger.Println("Context error:", ctx.Err())
 		return api.CreateSessionResponse{}, ctx.Err()
 	case err := <-errs: // Error handler
-		s.logger.Println("Failed to process charge:", err)
+		s.logger.Println("Failed to create session:", err)
 		return api.CreateSessionResponse{}, err
 	case res := <-ch: // Post-processing
 		s.logger.Printf("Creating payment session finished: %+v\n", res)
