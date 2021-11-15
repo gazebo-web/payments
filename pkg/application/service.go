@@ -110,12 +110,12 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 			Service:     string(api.PaymentServiceStripe),
 			Application: req.Application,
 		})
-		if err != nil && err != customers.ErrCustomerNotFound {
+		if err != nil && err.Error() != customers.ErrCustomerNotFound.Error() {
 			errs <- err
 			return
 		}
 
-		if err == customers.ErrCustomerNotFound {
+		if err != nil && err.Error() == customers.ErrCustomerNotFound.Error() {
 			if customerResponse, err = s.createCustomer(ctx, req); err != nil {
 				errs <- err
 				return
