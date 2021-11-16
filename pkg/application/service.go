@@ -111,13 +111,12 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 			Service:     string(api.PaymentServiceStripe),
 			Application: req.Application,
 		})
-		if err != nil && err.Error() != customers.ErrCustomerNotFound.Error() {
+		if err != nil && err != customers.ErrCustomerNotFound {
 			errs <- err
 			return
 		}
 
-		if err != nil && err.Error() == customers.ErrCustomerNotFound.Error() {
-			var err error
+		if err == customers.ErrCustomerNotFound {
 			s.logger.Println("Customer not found, creating new one:", req.Handle)
 			if customerResponse, err = s.createCustomer(ctx, req); err != nil {
 				errs <- err

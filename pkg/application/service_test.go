@@ -211,7 +211,7 @@ func (s *serviceTestSuite) TestCreateSessionOKWithCustomerCreation() {
 		Handle:      "test",
 		Service:     string(api.PaymentServiceStripe),
 		Application: "test",
-	}).Return(customers.CustomerResponse{}, errors.New("customer not found"))
+	}).Return(customers.CustomerResponse{}, customers.ErrCustomerNotFound)
 
 	s.Credits.On("GetUnitPrice", ctx, credits.GetUnitPriceRequest{Currency: "usd"}).Return(credits.GetUnitPriceResponse{
 		Amount:   2,
