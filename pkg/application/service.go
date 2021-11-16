@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	"io"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -111,12 +112,13 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 			Service:     string(api.PaymentServiceStripe),
 			Application: req.Application,
 		})
-		if err != nil && err != customers.ErrCustomerNotFound {
+
+		if err != nil && !strings.Contains(err.Error(), customers.ErrCustomerNotFound.Error()) {
 			errs <- err
 			return
 		}
 
-		if err == customers.ErrCustomerNotFound {
+		if err != nil && strings.Contains(err.Error(), customers.ErrCustomerNotFound.Error()) {
 			s.logger.Println("Customer not found, creating new one:", req.Handle)
 			if customerResponse, err = s.createCustomer(ctx, req); err != nil {
 				errs <- err
