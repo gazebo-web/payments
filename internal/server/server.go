@@ -52,6 +52,7 @@ func Run(config conf.Config, logger *log.Logger) error {
 		config:   config,
 		payments: ps,
 		logger:   logger,
+		adapter:  stripeAdapter,
 	})
 
 	if err := s.ListenAndServe(); err != nil {
