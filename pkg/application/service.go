@@ -6,6 +6,7 @@ import (
 	customers "gitlab.com/ignitionrobotics/billing/customers/pkg/api"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/adapter"
 	"gitlab.com/ignitionrobotics/billing/payments/pkg/api"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"io"
 	"log"
 	"time"
@@ -96,6 +97,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 		unitPrice, err := s.credits.GetUnitPrice(ctx, credits.GetUnitPriceRequest{Currency: "usd"})
 		if err != nil {
 			errs <- err
+			return
 		}
 
 		req.UnitPrice = unitPrice.Amount
@@ -110,12 +112,14 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 			Service:     string(api.PaymentServiceStripe),
 			Application: req.Application,
 		})
-		if err != nil && err != customers.ErrCustomerNotFound {
+
+		if err != nil && !ign.IsError(err, customers.ErrCustomerNotFound) {
 			errs <- err
 			return
 		}
 
-		if err == customers.ErrCustomerNotFound {
+		if err != nil && ign.IsError(err, customers.ErrCustomerNotFound) {
+			s.logger.Println("Customer not found, creating new one:", req.Handle)
 			if customerResponse, err = s.createCustomer(ctx, req); err != nil {
 				errs <- err
 				return
@@ -136,7 +140,7 @@ func (s *service) CreateSession(ctx context.Context, req api.CreateSessionReques
 		s.logger.Println("Context error:", ctx.Err())
 		return api.CreateSessionResponse{}, ctx.Err()
 	case err := <-errs: // Error handler
-		s.logger.Println("Failed to process charge:", err)
+		s.logger.Println("Failed to create session:", err)
 		return api.CreateSessionResponse{}, err
 	case res := <-ch: // Post-processing
 		s.logger.Printf("Creating payment session finished: %+v\n", res)
