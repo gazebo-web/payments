@@ -89,6 +89,14 @@ func (s *stripeAdapter) CreateCustomer(application, handle string) (string, erro
 // CreateSession initializes a new Stripe Checkout session.
 // Stripe docs: https://stripe.com/docs/api/checkout/sessions/create
 func (s *stripeAdapter) CreateSession(req api.CreateSessionRequest, cus customers.CustomerResponse) (api.CreateSessionResponse, error) {
+
+	params := stripe.Params{
+		Metadata: map[string]string{
+			"application": req.Application, // Used by webhooks
+			"handle":      req.Handle,
+		},
+	}
+
 	session, err := s.API.CheckoutSessions.New(&stripe.CheckoutSessionParams{
 		SuccessURL: &req.SuccessURL,
 		CancelURL:  &req.CancelURL,
@@ -114,12 +122,10 @@ func (s *stripeAdapter) CreateSession(req api.CreateSessionRequest, cus customer
 			},
 		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
-		Params: stripe.Params{
-			Metadata: map[string]string{
-				"application": req.Application, // Used by webhooks
-				"handle":      req.Handle,
-			},
+		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
+			Params: params,
 		},
+		Params: params,
 	})
 	if err != nil {
 		return api.CreateSessionResponse{}, err
